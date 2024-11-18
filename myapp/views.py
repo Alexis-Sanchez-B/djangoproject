@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from .models import Project,Task #consultar a la BD
 from django.shortcuts import get_object_or_404 #Obtenemos para dar error 404 cuando no se encuentre un dato
-from .forms import CreateNewTask
+from .forms import CreateNewTask, CreateNewProject
 
 
 # Create your views here.
@@ -29,7 +29,7 @@ def projects(request):
     #project = list(Project.objects.values()) #Esto devuelve un query set para mandar al cliente
     #return JsonResponse(project, safe=False)
     projects = Project.objects.all()
-    return render(request, 'projects.html',{
+    return render(request, 'projects/projects.html',{
         'projects': projects
     })
 
@@ -38,18 +38,36 @@ def tasks(request):
     #task = get_object_or_404(Task, id=id)
     #return HttpResponse('task: %s'% task.title)
     tasks = Task.objects.all()
-    return render(request,'tasks.html',{
+    return render(request,'tasks/tasks.html',{
         'tasks': tasks
     })
 
 def create_task(request):
     if request.method == 'GET':
-         return render(request,'create_task.html',{
+         return render(request,'tasks/create_task.html',{
         'form': CreateNewTask()
         })
     else:
         title = request.POST.get('title', '').strip()  # Usa .get() para acceder a los datos de forma segura.
         descripcion = request.POST.get('descripcion', '').strip()
         Task.objects.create(title=title, descripcion=descripcion, project_id=2)
-        return redirect('/tasks/')
+        return redirect('tasks')
    
+
+def create_project(request):
+    if request.method == 'GET':
+        return render(request,'projects/create_project.html',{
+        'form': CreateNewProject()
+        })
+    else:
+        nombre = request.POST.get('name','').strip()
+        Project.objects.create(name=nombre)
+        return redirect('projects')
+    
+def project_detail(request,id):
+    project = get_object_or_404(Project, id=id)
+    tasks = Task.objects.filter(project_id=id)
+    return render(request, 'projects/detail.html',{
+        'project': project,
+        'tasks': tasks
+    })
